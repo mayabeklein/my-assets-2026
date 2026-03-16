@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empire OS | Control Tower</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root { --rose: #EC6CA1; --olive: #4A503C; --white: #FFFFFF; --rose-light: rgba(236, 108, 161, 0.1); }
+        body { font-family: 'Assistant', sans-serif; background-color: #FDFCFB; color: var(--olive); margin: 0; overflow: hidden; }
+        .luxury-card { background: var(--white); border: 1px solid rgba(74, 80, 60, 0.1); border-radius: 20px; box-shadow: 0 10px 30px rgba(74, 80, 60, 0.05); }
+        .sidebar-active { background: var(--rose-light); color: var(--rose); border-right: 4px solid var(--rose); font-weight: 800; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState } = React;
+        const App = () => {
+            const [tab, setTab] = useState('crm');
+            return (
+                <div className="flex h-screen">
+                    <aside className="w-64 bg-white border-l border-black/5 flex flex-col p-6 space-y-6">
+                        <div className="text-center mb-10"><span className="text-xl font-black italic">EMPIRE OS</span></div>
+                        <nav className="flex-1 space-y-1 text-right">
+                            <button onClick={()=>setTab('crm')} className={`w-full text-right p-4 rounded-xl flex items-center gap-4 ${tab==='crm'?'sidebar-active':'opacity-40'}`}>
+                                <span>👥</span> CRM לקוחות
+                            </button>
+                            <button onClick={()=>setTab('kb')} className={`w-full text-right p-4 rounded-xl flex items-center gap-4 ${tab==='kb'?'sidebar-active':'opacity-40'}`}>
+                                <span>📚</span> ניהול ידע
+                            </button>
+                        </nav>
+                        <div className="pt-6 border-t border-black/5 space-y-2">
+                            <a href="../app/" target="_blank" className="block w-full text-center py-3 rounded-xl bg-slate-100 text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors">תצוגת אפליקציה</a>
+                            <a href="../sales/rebalance/" target="_blank" className="block w-full text-center py-3 rounded-xl bg-slate-100 text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors">תצוגת דף מכירה</a>
+                        </div>
+                    </aside>
+                    <main className="flex-1 p-12 overflow-y-auto bg-[#FDFCFB]">
+                        {tab === 'crm' ? (
+                            <div className="space-y-8 animate-in text-right">
+                                <h2 className="text-3xl font-black italic">CRM מטבולי</h2>
+                                <div className="luxury-card overflow-hidden">
+                                    <table className="w-full text-right">
+                                        <thead className="bg-slate-50 border-b border-black/5">
+                                            <tr>
+                                                <th className="p-5 text-[10px] font-black uppercase opacity-40">לקוחה</th>
+                                                <th className="p-5 text-[10px] font-black uppercase opacity-40">סטטוס</th>
+                                                <th className="p-5 text-[10px] font-black uppercase opacity-40">תחושה</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-b border-slate-50">
+                                                <td className="p-5"><div className="font-bold">דוגמה: דנה לוי</div><div className="text-[10px] opacity-40">dana@gmail.com</div></td>
+                                                <td className="p-5 font-bold text-xs">Active / ReBalance</td>
+                                                <td className="p-5 text-rose-pink font-bold italic" style={{color:'#EC6CA1'}}>מאוזנת</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-8 animate-in text-right">
+                                <h2 className="text-3xl font-black italic">סנכרון ידע (RAG)</h2>
+                                <div className="luxury-card p-10 space-y-6">
+                                    <textarea className="w-full h-64 bg-slate-50 border-none rounded-2xl p-6 text-sm outline-none focus:ring-2 focus:ring-rose-pink" placeholder="הדביקי כאן עדכוני ידע חדשים מהנושן או קבצי אקסל..." />
+                                    <button className="w-full py-4 rounded-2xl text-white font-bold transition-transform active:scale-[0.98]" style={{backgroundColor:'#EC6CA1', boxShadow: '0 10px 20px rgba(236,108,161,0.2)'}}>עדכון מוח הסוכנת (Maya AI)</button>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        };
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
