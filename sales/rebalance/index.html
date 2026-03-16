@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReBalance | The 72h Cortisol Reset</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --rose-pink: #EC6CA1;
+            --dark-olive: #4A503C;
+            --sage-green: #889671;
+            --white: #FFFFFF;
+            --sage-light: rgba(136, 150, 113, 0.12);
+            --rose-light: rgba(236, 108, 161, 0.15);
+            --olive-10: rgba(74, 80, 60, 0.10);
+        }
+
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background-color: var(--white); 
+            color: var(--dark-olive); 
+            margin: 0; padding: 0;
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, span, p, button, input { font-style: normal !important; letter-spacing: -0.01em; }
+        
+        .luxury-card { 
+            background: var(--white); 
+            border: 1px solid var(--olive-10); 
+            border-radius: 24px; 
+            box-shadow: 0 10px 40px rgba(74, 80, 60, 0.05); 
+        }
+
+        .cta-button {
+            background-color: var(--rose-pink);
+            color: var(--white);
+            border-radius: 20px;
+            font-weight: 800;
+            height: 64px;
+            display: flex;
+            align-items: center; justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 10px 25px var(--rose-light);
+            font-size: 1.2rem;
+            width: 100%;
+            text-decoration: none;
+        }
+        .cta-button:hover { transform: translateY(-3px); box-shadow: 0 15px 35px var(--rose-light); }
+
+        .protocol-border { border-right: 6px solid var(--rose-pink); }
+        .animate-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <!-- Nav -->
+    <nav class="p-8 flex justify-between items-center max-w-6xl mx-auto">
+        <div class="text-[10px] font-black tracking-[0.4em] text-slate-300 uppercase">THE SYSTEM / 2026</div>
+        <div class="w-10 h-10 rounded-full border-2 border-rose-pink p-0.5 shadow-sm">
+            <div class="w-full h-full bg-slate-100 rounded-full flex items-center justify-center font-bold text-[10px]">MB</div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="max-w-4xl mx-auto px-6 py-12 md:py-24 text-center animate-in">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-sage-light text-dark-olive rounded-full text-[10px] font-black tracking-widest uppercase mb-8">
+            <i data-lucide="zap" class="w-3 h-3 text-rose-pink"></i> Metabolic Science
+        </div>
+        <h1 class="text-5xl md:text-8xl font-extrabold leading-[0.9] mb-8 tracking-tighter uppercase">
+            תאפסי את הסטרס. <br/><span style="color: var(--rose-pink)">תחזירי את השליטה.</span>
+        </h1>
+        <p class="text-xl md:text-2xl opacity-60 max-w-2xl mx-auto mb-12 font-medium">הפרוטוקול המדעי לסינכרון הורמונלי ב-72 שעות. לא עוד דיאטה, אלא המערכת החכמה שנושמת איתך.</p>
+        
+        <div class="max-w-md mx-auto space-y-6">
+            <a href="#purchase" class="cta-button uppercase tracking-[0.1em]">אני רוצה להפעיל את המערכת</a>
+        </div>
+    </header>
+
+    <!-- The Problem Block -->
+    <section class="bg-[#FDFCFB] py-24 border-y border-olive-10">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="luxury-card p-10 md:p-20 protocol-border relative overflow-hidden">
+                <h2 class="text-4xl font-black mb-10 tracking-tight italic">אני יודעת איך זה מרגיש.</h2>
+                <div class="space-y-8 text-xl opacity-80 font-medium leading-relaxed">
+                    <p>את קמה בבוקר עייפה, למרות שישנת. את מרגישה שהגוף שלך "נלחם" בך. הנפיחות בבטן לא יורדת, והמשקל? הוא פשוט תקוע.</p>
+                    <div class="bg-rose-light/20 p-6 rounded-2xl border-r-4 border-rose-pink">
+                        <p class="font-extrabold text-dark-olive">זה לא בגלל שאין לך כוח רצון. זה בגלל שהמערכת ההורמונלית שלך נמצאת במצב הישרדות.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section id="purchase" class="py-32 bg-dark-olive text-white text-center relative overflow-hidden">
+        <div class="relative z-10 max-w-2xl mx-auto px-6 space-y-12">
+            <div class="space-y-4">
+                <div class="text-[11px] font-black text-rose-pink uppercase tracking-[0.6em]">OFFER EXPIRES SOON</div>
+                <h2 class="text-5xl md:text-7xl font-black tracking-tighter leading-none uppercase italic">הצטרפי עכשיו <br/>במחיר השקה.</h2>
+            </div>
+            <div class="text-7xl md:text-8xl font-black text-rose-pink tracking-tighter">₪197</div>
+            <div class="max-w-md mx-auto">
+                <a href="#" class="cta-button uppercase tracking-[0.2em] text-xs">הפעלת גישה מיידית</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
