@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Balance | Fuel Library</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        :root {
+            --rose-pink: #EC6CA1;
+            --dark-olive: #4A503C;
+            --sage-green: #889671;
+            --white: #FFFFFF;
+            --sage-light: rgba(136, 150, 113, 0.12);
+            --rose-light: rgba(236, 108, 161, 0.10);
+            --olive-10: rgba(74, 80, 60, 0.10);
+        }
+
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background-color: var(--white); 
+            color: var(--dark-olive); 
+            margin: 0; padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Brand DNA Rules: No Italics */
+        h1, h2, h3, h4, span, p, button, input { 
+            font-style: normal !important; 
+            letter-spacing: -0.01em;
+        }
+        
+        .luxury-card { 
+            background: var(--white); 
+            border: 1px solid var(--olive-10); 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(74, 80, 60, 0.05); 
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .luxury-card:hover { transform: translateY(-4px); box-shadow: 0 15px 40px rgba(74, 80, 60, 0.08); }
+
+        .filter-chip {
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 700;
+            border: 1px solid var(--olive-10);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .filter-chip.active {
+            background-color: var(--dark-olive);
+            color: var(--white);
+            border-color: var(--dark-olive);
+        }
+
+        .cta-button {
+            background-color: var(--rose-pink);
+            color: var(--white);
+            border-radius: 20px;
+            font-weight: 700;
+            height: 52px;
+            display: flex;
+            align-items: center; justify-content: center;
+            border: none;
+            box-shadow: 0 4px 15px var(--rose-light);
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .animate-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // Custom Icons
+        const Icons = {
+            Search: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>,
+            Clock: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
+            ChevronLeft: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>,
+            Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+            Filter: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="2" y1="14" x2="6" y2="14"></line><line x1="10" y1="8" x2="14" y2="8"></line><line x1="18" y1="16" x2="22" y2="16"></line></svg>
+        };
+
+        // --- ה-DATABASE המרכזי של המתכונים ---
+        const RECIPE_DATABASE = [
+            {
+                id: 1,
+                category: "סלטים",
+                program: "ReBalance",
+                title: "טחינה ירוקה (ה-טחינה לשבת)",
+                subtitle: "סמיכה, עשירה ומלאת טעם",
+                time: "10 דק'",
+                ingredients: ["1 כוס טחינה גולמית", "מיץ מ-2 לימונים", "2 כפות שום כתוש", "חופן פטרוזיליה", "קוביות קרח"],
+                instructions: ["קוצצים את הירק דק", "מערבבים את כל הנוזלים", "מוסיפים קרח למרקם אוורירי"],
+                macro: "שומן איכותי",
+                benefit: "סידן וברזל לסנכרון הורמונלי"
+            },
+            {
+                id: 2,
+                category: "תוספות",
+                program: "72h Reset",
+                title: "שעועית ירוקה ופטריות",
+                subtitle: "קראנצ'ית ומורידה נפיחות",
+                time: "15 דק'",
+                ingredients: ["שעועית ירוקה דקה", "פטריות שמפיניון", "סויה איכותית", "שמן שומשום", "שום"],
+                instructions: ["מקפיצים את השעועית", "מוסיפים פטריות ותבלינים", "מגישים חם"],
+                macro: "סיבים תזונתיים",
+                benefit: "מצוין לעיכול וניקוי רעלים"
+            },
+            {
+                id: 3,
+                category: "עיקריות",
+                program: "ReBalance",
+                title: "סלמון במרינדת ג'ינג'ר",
+                subtitle: "חלבון נקי לשיקום מערכת העצבים",
+                time: "20 דק'",
+                ingredients: ["פילה סלמון", "ג'ינג'ר מגורד", "לימון", "שמן זית", "מלח גס"],
+                instructions: ["משרים את הסלמון", "אופים בתנור חם 15 דקות", "מגישים עם ירק ירוק"],
+                macro: "חלבון ושומן אומגה 3",
+                benefit: "הורדת רמת הקורטיזול בגוף"
+            }
+        ];
+
+        const App = () => {
+            const [search, setSearch] = useState("");
+            const [activeCat, setActiveCat] = useState("הכל");
+            const [selected, setSelected] = useState(null);
+
+            const filtered = useMemo(() => {
+                return RECIPE_DATABASE.filter(r => {
+                    const matchesSearch = r.title.includes(search) || r.program.includes(search) || r.ingredients.some(i => i.includes(search));
+                    const matchesCat = activeCat === "הכל" || r.category === activeCat;
+                    return matchesSearch && matchesCat;
+                });
+            }, [search, activeCat]);
+
+            if (selected) {
+                return (
+                    <div className="min-h-screen bg-white animate-in p-6 md:p-12">
+                        <div className="max-w-2xl mx-auto">
+                            <button onClick={() => setSelected(null)} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] mb-12 opacity-40 hover:opacity-100 transition-opacity">
+                                <Icons.ChevronLeft /> חזרה לספריית הדלק
+                            </button>
+                            
+                            <header className="text-right space-y-4 mb-12">
+                                <span className="text-[10px] font-black text-rose-pink uppercase tracking-[0.4em]">{selected.category} / {selected.program}</span>
+                                <h1 className="text-4xl md:text-5xl font-extrabold text-dark-olive leading-tight tracking-tighter italic uppercase">{selected.title}</h1>
+                                <p className="text-lg text-slate-400 font-bold italic">{selected.subtitle}</p>
+                                
+                                <div className="flex items-center gap-6 pt-6 border-t border-olive-10">
+                                    <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest opacity-60"><Icons.Clock /> {selected.time}</div>
+                                    <div className="text-[11px] font-black text-rose-pink uppercase tracking-widest">{selected.macro}</div>
+                                </div>
+                            </header>
+
+                            <div className="grid md:grid-cols-2 gap-12">
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black italic underline decoration-rose-pink/20 underline-offset-8 uppercase">המצרכים</h3>
+                                    <ul className="space-y-4">
+                                        {selected.ingredients.map((ing, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-base font-bold text-dark-olive/80">
+                                                <div className="w-5 h-5 rounded-lg bg-sage-light flex items-center justify-center text-sage-green shrink-0"><Icons.Check /></div>
+                                                {ing}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="space-y-6">
+                                    <h3 className="text-xl font-black italic underline decoration-rose-pink/20 underline-offset-8 uppercase">פרוטוקול הכנה</h3>
+                                    <div className="space-y-6">
+                                        {selected.instructions.map((step, i) => (
+                                            <div key={i} className="flex gap-4">
+                                                <div className="text-2xl font-black text-rose-pink/20 leading-none italic">0{i+1}</div>
+                                                <p className="text-sm font-bold opacity-70 leading-relaxed">{step}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="min-h-screen bg-white pb-32 animate-in">
+                    {/* Search & Filter Header */}
+                    <header className="max-w-4xl mx-auto px-6 pt-16 pb-12 text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-sage-light text-sage-green rounded-full text-[10px] font-black tracking-widest uppercase mb-6">
+                            Fuel Library
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-dark-olive mb-6 italic uppercase">ספריית הדלק המטבולי.</h1>
+                        
+                        <div className="relative max-w-2xl mx-auto mb-10">
+                            <input 
+                                type="text" 
+                                placeholder="חפשי לפי רכיב, תוכנית או שם מתכון..."
+                                className="w-full bg-white border border-olive-10 rounded-2xl p-6 pr-14 text-sm font-bold outline-none focus:border-rose-pink focus:ring-4 focus:ring-rose-light transition-all"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                            <div className="absolute top-6 right-6 text-dark-olive opacity-40"><Icons.Search /></div>
+                        </div>
+
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 justify-center">
+                            {["הכל", "סלטים", "תוספות", "עיקריות", "שייקים"].map(cat => (
+                                <button 
+                                    key={cat}
+                                    onClick={() => setActiveCat(cat)}
+                                    className={`filter-chip ${activeCat === cat ? 'active' : 'opacity-40 hover:opacity-100'}`}
+                                >
+                                    {cat}
+                                </button>
+                            ))}
+                        </div>
+                    </header>
+
+                    {/* Recipe Grid */}
+                    <main className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filtered.map(r => (
+                            <div key={r.id} onClick={() => setSelected(r)} className="luxury-card p-10 flex flex-col justify-between group">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-start">
+                                        <span className="text-[10px] font-black text-rose-pink uppercase tracking-widest">{r.category}</span>
+                                        <div className="flex items-center gap-1 text-[10px] font-bold opacity-30"><Icons.Clock /> {r.time}</div>
+                                    </div>
+                                    <h3 className="text-2xl font-black leading-tight group-hover:text-rose-pink transition-colors italic uppercase">{r.title}</h3>
+                                    <p className="text-xs font-bold opacity-40">{r.subtitle}</p>
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-olive-10 flex justify-between items-center">
+                                    <span className="text-[9px] font-black bg-sage-light text-sage-green px-2 py-1 rounded uppercase tracking-widest">{r.program}</span>
+                                    <Icons.ChevronLeft />
+                                </div>
+                            </div>
+                        ))}
+                    </main>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
