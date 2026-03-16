@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Balance Empire | Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --rose-pink: #EC6CA1;
+            --dark-olive: #4A503C;
+            --sage-green: #889671;
+            --white: #FFFFFF;
+            --olive-10: rgba(74, 80, 60, 0.08);
+            --rose-light: rgba(236, 108, 161, 0.12);
+        }
+
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background-color: #FDFCFB; 
+            color: var(--dark-olive); 
+            margin: 0; padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* חוקי המותג: ללא נטוי בעברית */
+        h1, h2, h3, h4, span, p, a { 
+            font-style: normal !important; 
+            letter-spacing: -0.01em;
+        }
+        
+        .hub-card { 
+            background: var(--white); 
+            border: 1px solid var(--olive-10); 
+            border-radius: 24px; 
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .hub-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 25px 50px rgba(74, 80, 60, 0.08);
+            border-color: var(--rose-pink);
+        }
+
+        .icon-box {
+            width: 70px;
+            height: 70px;
+            background-color: #F8F9FA;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .hub-card:hover .icon-box {
+            background-color: var(--rose-light);
+            transform: scale(1.1);
+        }
+
+        .badge {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 5px 14px;
+            background: var(--olive-10);
+            border-radius: 50px;
+            margin-bottom: 15px;
+            opacity: 0.6;
+        }
+
+        .animate-fade {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center py-20 px-6">
+
+    <div class="max-w-4xl w-full space-y-16 animate-fade">
+        
+        <!-- לוגו וכותרת -->
+        <header class="text-center space-y-6">
+            <div class="w-20 h-20 bg-dark-olive text-white rounded-[2.5rem] flex items-center justify-center text-3xl font-black italic mx-auto shadow-2xl" style="background-color: var(--dark-olive);">
+                MB
+            </div>
+            <div class="space-y-2">
+                <h1 class="text-4xl md:text-5xl font-extrabold tracking-tighter uppercase">My Balance Empire</h1>
+                <p class="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em]">Infrastructure Control Hub • 2026</p>
+            </div>
+        </header>
+
+        <!-- רשת הניווט -->
+        <main class="grid md:grid-cols-2 gap-8">
+            
+            <!-- מגדל הפיקוח -->
+            <a href="./admin/" class="hub-card group">
+                <span class="badge">Control Center</span>
+                <div class="icon-box">🏰</div>
+                <h3 class="text-xl font-extrabold uppercase mb-2">מגדל פיקוח</h3>
+                <p class="text-sm opacity-50 font-bold leading-relaxed">ניהול לקוחות, סנכרון ידע וצפייה בנתונים בזמן אמת.</p>
+            </a>
+
+            <!-- אפליקציית הלקוחה -->
+            <a href="./app/" class="hub-card border-rose-100 shadow-xl shadow-rose-100/10 group">
+                <span class="badge" style="color: var(--rose-pink); opacity: 1;">User Interface</span>
+                <div class="icon-box" style="background-color: var(--rose-light);">📱</div>
+                <h3 class="text-xl font-extrabold uppercase mb-2" style="color: var(--rose-pink);">אפליקציית הלקוחה</h3>
+                <p class="text-sm opacity-50 font-bold leading-relaxed">הריטואל היומי, צ'ק-אין רגשי והנחיות הפרוטוקול המותאם.</p>
+            </a>
+
+            <!-- ספריית הדלק -->
+            <a href="./library/" class="hub-card group">
+                <span class="badge">The Assets</span>
+                <div class="icon-box">🥗</div>
+                <h3 class="text-xl font-extrabold uppercase mb-2">ספריית הדלק</h3>
+                <p class="text-sm opacity-50 font-bold leading-relaxed">מנוע המתכונים החכם עם סינון מטבולי מתקדם וחיפוש מהיר.</p>
+            </a>
+
+            <!-- דפי מכירה -->
+            <a href="./sales/rebalance/" class="hub-card group">
+                <span class="badge">Growth Engine</span>
+                <div class="icon-box">⚡</div>
+                <h3 class="text-xl font-extrabold uppercase mb-2">מכונות המכירה</h3>
+                <p class="text-sm opacity-50 font-bold leading-relaxed">דפי הנחיתה של ReBalance ופרוטוקול ה-Reset המדעי.</p>
+            </a>
+
+        </main>
+
+        <!-- פוטר -->
+        <footer class="pt-16 text-center border-t border-olive-10 opacity-30">
+            <p class="text-[10px] font-black uppercase tracking-[0.6em]">Proprietary System of Maya Ben Efraim Empire</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
