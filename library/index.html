@@ -3,210 +3,179 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Balance | Recipe Library</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <title>Maya Ben Efraim - Premium Fine Library</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800&family=Open+Sans+Condensed:wght@300;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --rose: #EC6CA1;
-            --olive: #4A503C;
-            --sage: #889671;
-            --white: #FFFFFF;
-            --bg: #FDFCFB;
-            --border: rgba(74, 80, 60, 0.08);
-        }
-
-        body { 
-            font-family: 'Assistant', sans-serif; 
-            background-color: var(--bg); 
-            color: var(--olive); 
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        h1, h2, h3, h4, span, p, button { font-style: normal !important; }
-
-        .recipe-card {
-            background: var(--white);
-            border-radius: 24px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-
-        .recipe-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(74, 80, 60, 0.05);
-            border-color: var(--rose);
-        }
-
-        .filter-btn {
-            white-space: nowrap;
-            padding: 8px 20px;
-            border-radius: 100px;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border);
-            background: white;
-        }
-
-        .filter-btn.active {
-            background: var(--olive);
-            color: white;
-            border-color: var(--olive);
-        }
-
-        .tag {
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            padding: 4px 10px;
-            border-radius: 6px;
-            background: var(--bg);
-        }
-
+        body { background-color: #F9F9F7; font-family: 'Assistant', sans-serif; margin: 0; -webkit-tap-highlight-color: transparent; }
+        .font-english { font-family: 'Open Sans Condensed', sans-serif; }
+        .ingredient-checkbox input:checked + div { background-color: #889671; border-color: #889671; }
+        .ingredient-checkbox input:checked + div svg { opacity: 1; transform: scale(1); }
+        .ingredient-checkbox input:not(:checked) + div svg { opacity: 0; transform: scale(0.5); }
+        .ingredient-text { transition: all 0.3s ease; }
+        .ingredient-checkbox input:checked ~ .ingredient-text { color: #889671; opacity: 0.6; text-decoration: line-through; }
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .recipe-card { transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); }
+        .recipe-card:hover { transform: translateY(-8px); box-shadow: 0 30px 60px -12px rgba(74,80,60,0.15); }
+        h1, h2, h3, h4, span, p, label, button { font-style: normal !important; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useMemo } = React;
 
-        // נתוני המתכונים ששאבנו מה-Notion
-        const RECIPE_DATA = [
-            { id: 46, title: "שייק ירוק עמוק", cat: "שייקים", time: "5 דק'", level: "קל", gluten: false, dairy: false, ingredients: ["חסה", "קישוא", "תפוח", "ספירולינה"], substitutes: "תפוח -> אגס", benefit: "ניקוי כבד ואיזון אנרגיה" },
-            { id: 47, title: "סלמון במרינדת אסיאתית", cat: "חלבונים", time: "20 דק'", level: "בינוני", gluten: false, dairy: false, ingredients: ["פילה סלמון", "סויה", "ג'ינג'ר", "שום"], substitutes: "סלמון -> דג לבן", benefit: "אומגה 3 ושובע ממושך" },
-            { id: 48, title: "מאפינס ברוקולי פטה", cat: "מאפים", time: "35 דק'", level: "קל", gluten: true, dairy: true, ingredients: ["ברוקולי", "ביצים", "גבינת פטה", "קמח כוסמין"], substitutes: "קמח כוסמין -> קמח שקדים", benefit: "חלבון זמין בבוקר" },
-            { id: 49, title: "סלט נבטים וקולורבי", cat: "סלטים", time: "12 דק'", level: "קל", gluten: false, dairy: false, ingredients: ["נבטים סיניים", "קולורבי", "בוטנים", "רוטב אסייתי"], substitutes: "בוטנים -> שומשום", benefit: "קראנץ' מטבולי" },
-            // מיה - כאן יכנסו שאר 87 המתכונים מהנושן באותו מבנה
+        // --- ICONS ---
+        const Clock = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const ChefHat = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" y1="17" x2="18" y2="17"/></svg>;
+        const Users = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
+        const Check = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+        const PlayCircle = ({size, className}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>;
+        const XIcon = ({size}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const ArrowRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>;
+
+        // --- DATABASE: כאן ירוכזו כל 200 המתכונים ---
+        const RECIPES_DB = [
+            // --- SMOOTHIES (1-9) ---
+            { id: 1, category: "SMOOTHIES", title: "שייק פירות יער", subtitle: "שייק מתוק ומרענן להתחלת היום", benefit: ["עשיר בוויטמינים ונוגדי חמצון,", "מספק אנרגיה זמינה ללא הכבדה."], tags: ["טבעוני", "מיני בוקר"], macros: [{ type: 'פחמימה', amount: '1', color: '#EC6CA1' }], meta: [{ label: 'הכנה', val: "3 דק'" }, { label: 'זמן', val: "3 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "1" }], image: "https://images.unsplash.com/photo-1553530666-ba11a7da3888?q=80&w=1200", ingredients: ["1/2 בננה", "100 גרם פירות יער קפואים", "1 כפית צ'יה", "כוס מים"], instructions: ["מניחים את כל הרכיבים בבלנדר.", "טוחנים עד למרקם חלק.", "שותים מיד."] },
+            { id: 2, category: "SMOOTHIES", title: "שייק ירוק מנקה", subtitle: "פצצת בריאות לניקוי הגוף", benefit: ["ניקוי כבד טבעי,", "סיוע בעיכול."], tags: ["טבעוני", "מיני בוקר"], macros: [{ type: 'פחמימה', amount: '1', color: '#EC6CA1' }], meta: [{ label: 'הכנה', val: "5 דק'" }, { label: 'זמן', val: "5 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "1" }], image: "https://images.unsplash.com/photo-1515023115689-589c33041d3c?q=80&w=1200", ingredients: ["חופן חסה", "1/2 אפרסק קפוא", "כף צ'יה", "מים"], instructions: ["טוחנים הכל בבלנדר חזק.", "שותים בלגימות קטנות."] },
+            
+            // --- VEGETABLES & SALADS (10-14) ---
+            { id: 10, category: "SALADS", title: "טחינה ירוקה של שבת", subtitle: "סמיכה, עשירה ומלאת טעם", benefit: ["עשירה בסידן וברזל,", "משביעה מאוד."], tags: ["צמחוני", "רטבים וממרחים"], macros: [{ type: 'שומן', amount: '1', color: '#FBBF24' }], meta: [{ label: 'הכנה', val: "10 דק'" }, { label: 'זמן', val: "10 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "4" }], image: "https://images.unsplash.com/photo-1548943487-a2e4e43b4853?q=80&w=1200", ingredients: ["1 כוס טחינה גולמית", "מיץ מ-2 לימונים", "שום", "פטרוזיליה"], instructions: ["קוצצים פטרוזיליה דק.", "מערבבים טחינה ומים בהדרגה.", "מוסיפים תבלינים וקרח לאווריריות."] },
+            
+            // --- MEAT & FISH (41-47) ---
+            { id: 41, category: "MEAT & POULTRY", title: "עוף במרינדת פפריקה", subtitle: "כרעי עוף שחומים בטעם של בית", benefit: ["חלבון משפחתי קלאסי,", "ללא שומן מעובד."], tags: ["ארוחת צהריים", "בשרי"], macros: [{ type: 'חלבון', amount: '2', color: '#60A5FA' }], meta: [{ label: 'הכנה', val: "10 דק'" }, { label: 'זמן', val: "60 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "4" }], image: "https://images.unsplash.com/photo-1598103442097-8b74394b95c6?q=80&w=1200", ingredients: ["4 כרעי עוף", "סילאן", "פפריקה", "שום"], instructions: ["מעסים את העוף במרינדה.", "אופים ב-200 מעלות 45 דקות מכוסה.", "משחימים 15 דקות ללא כיסוי."] },
+            { id: 44, category: "FISH", title: "פילה דניס על עגבניות", subtitle: "מנה יוקרתית וקלילה", benefit: ["דג לבן קל לעיכול,", "עשיר בליקופן מהעגבניות."], tags: ["ארוחת ערב", "בשרי-עוף-דגים"], macros: [{ type: 'חלבון', amount: '2', color: '#60A5FA' }], meta: [{ label: 'הכנה', val: "10 דק'" }, { label: 'זמן', val: "25 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "2" }], image: "https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?q=80&w=1200", ingredients: ["2 פילה דניס", "עגבניות שרי", "טימין", "שמן זית"], instructions: ["צולים עגבניות בתנור.", "מניחים דג מעל וצולים 8 דקות נוספות."] },
+            { id: 46, category: "FISH", title: "פילה אמנון בעשבי תיבול", subtitle: "מהיר, רענן וקליל במחבת", benefit: ["חלבון רזה מאוד,", "מצוין לאיזון הורמונלי בערב."], tags: ["ארוחת ערב", "בשרי-עוף-דגים"], macros: [{ type: 'חלבון', amount: '2', color: '#60A5FA' }], meta: [{ label: 'הכנה', val: "5 דק'" }, { label: 'זמן', val: "15 דק'" }, { label: 'רמה', val: "קל" }, { label: 'מנות', val: "2" }], image: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?q=80&w=1200", ingredients: ["2 פילה אמנון", "שמן זית", "לימון", "פטרוזיליה"], instructions: ["מייבשים את הדג.", "צורבים 4 דקות מכל צד.", "מוסיפים לימון ושום בסוף."] }
+            
+            // מיה: בכל פעם שאת מקבלת ממני "בלוק מתכונים", פשוט תוסיפי אותו כאן בתוך הסוגריים המרובעים.
         ];
 
-        const App = () => {
-            const [activeCat, setActiveCat] = useState('הכל');
-            const [searchQuery, setSearchQuery] = useState('');
-            const [selectedRecipe, setSelectedRecipe] = useState(null);
-            const [filterGluten, setFilterGluten] = useState(false);
-
-            const categories = ['הכל', 'שייקים', 'חלבונים', 'סלטים', 'מאפים', 'רטבים', 'מתוקים'];
-
-            const filteredRecipes = useMemo(() => {
-                return RECIPE_DATA.filter(r => {
-                    const matchesCat = activeCat === 'הכל' || r.cat === activeCat;
-                    const matchesSearch = r.title.includes(searchQuery) || r.ingredients.some(i => i.includes(searchQuery));
-                    const matchesGluten = filterGluten ? !r.gluten : true;
-                    return matchesCat && matchesSearch && matchesGluten;
-                });
-            }, [activeCat, searchQuery, filterGluten]);
-
-            if (selectedRecipe) {
-                return (
-                    <div className="min-h-screen bg-white p-6 animate-in fade-in" dir="rtl">
-                        <button onClick={() => setSelectedRecipe(null)} className="mb-8 flex items-center gap-2 font-bold text-sm opacity-50">
-                            <span>←</span> חזרה לספרייה
-                        </button>
-                        <div className="max-w-2xl mx-auto space-y-8">
-                            <header className="space-y-4 text-center">
-                                <span className="tag text-[#EC6CA1]">{selectedRecipe.cat}</span>
-                                <h1 className="text-4xl font-extrabold tracking-tight">{selectedRecipe.title}</h1>
-                                <p className="text-lg opacity-60 font-medium italic">{selectedRecipe.benefit}</p>
-                            </header>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-[#FDFCFB] p-4 rounded-2xl border border-black/5 text-center">
-                                    <div className="text-[10px] font-black uppercase opacity-30">זמן הכנה</div>
-                                    <div className="font-bold">{selectedRecipe.time}</div>
-                                </div>
-                                <div className="bg-[#FDFCFB] p-4 rounded-2xl border border-black/5 text-center">
-                                    <div className="text-[10px] font-black uppercase opacity-30">רמת קושי</div>
-                                    <div className="font-bold">{selectedRecipe.level}</div>
+        const RecipeDetail = ({ recipe, onBack }) => {
+            const metaIcons = [ <Clock size={16}/>, <Clock size={16}/>, <ChefHat size={16}/>, <Users size={16}/> ];
+            return (
+                <div className="w-full min-h-screen bg-[#F9F9F7] pb-24 fade-in relative">
+                    <button onClick={onBack} className="fixed top-6 right-6 z-50 bg-white shadow-lg w-12 h-12 rounded-full flex items-center justify-center text-[#4A503C] hover:scale-110 transition-transform">
+                        <ArrowRight />
+                    </button>
+                    <div className="w-full h-[40vh] relative">
+                        <img src={recipe.image} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                    </div>
+                    <div className="max-w-4xl mx-auto px-4 md:px-10 relative z-10 -mt-20 md:-mt-32">
+                        <div className="bg-white border border-[#4A503C]/10 shadow-2xl p-8 md:p-16 rounded-[40px]">
+                            <div className="text-center mb-12">
+                                <span className="font-english text-[#889671] text-xs font-bold tracking-[0.4em] uppercase block mb-4">{recipe.category}</span>
+                                <h1 className="text-4xl md:text-6xl font-extrabold text-[#4A503C] mb-4 tracking-tight leading-tight">{recipe.title}</h1>
+                                <p className="text-xl text-[#4A503C]/80 font-medium mb-6">{recipe.subtitle}</p>
+                                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                                    {recipe.tags.map(tag => <span key={tag} className="bg-[#F9F9F7] border border-[#4A503C]/10 px-3 py-1.5 rounded-full text-xs font-bold">{tag}</span>)}
                                 </div>
                             </div>
-
-                            <div className="space-y-6">
-                                <h3 className="text-xl font-bold border-b pb-2">מה צריך?</h3>
-                                <ul className="space-y-3">
-                                    {selectedRecipe.ingredients.map(ing => (
-                                        <li key={ing} className="flex items-center gap-3 font-medium">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#EC6CA1]"></span>
-                                            {ing}
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="grid grid-cols-4 gap-3 md:gap-6 mb-16">
+                                {recipe.meta.map((item, i) => (
+                                    <div key={i} className="bg-[#F9F9F7] py-4 rounded-3xl border border-[#4A503C]/5 flex flex-col items-center text-center">
+                                        <span className="text-[#889671] mb-2">{metaIcons[i]}</span>
+                                        <span className="text-[10px] uppercase opacity-40 font-bold mb-1">{item.label}</span>
+                                        <span className="text-sm md:text-lg font-bold text-[#4A503C]">{item.val}</span>
+                                    </div>
+                                ))}
                             </div>
-
-                            <div className="bg-[#4A503C] text-white p-6 rounded-[24px]">
-                                <h3 className="text-[11px] font-black uppercase tracking-widest opacity-50 mb-3">תחליפים חכמים</h3>
-                                <p className="font-bold">{selectedRecipe.substitutes}</p>
+                            <div className="grid md:grid-cols-12 gap-12 border-t pt-12 border-[#4A503C]/10">
+                                <div className="md:col-span-5">
+                                    <h3 className="text-2xl font-bold mb-8">מצרכים</h3>
+                                    <ul className="space-y-4">
+                                        {recipe.ingredients.map((ing, i) => (
+                                            <li key={i} className="ingredient-checkbox flex items-start gap-4 group cursor-pointer">
+                                                <label className="flex items-start cursor-pointer mt-1">
+                                                    <input type="checkbox" className="absolute opacity-0 w-0 h-0" />
+                                                    <div className="w-6 h-6 rounded-lg border border-[#4A503C]/20 flex items-center justify-center transition-all bg-white group-hover:border-[#889671]">
+                                                        <Check size={14} />
+                                                    </div>
+                                                </label>
+                                                <span className="ingredient-text text-lg font-medium opacity-90">{ing}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <div className="md:col-span-7">
+                                    <h3 className="text-2xl font-bold mb-8">פרוטוקול הכנה</h3>
+                                    <div className="space-y-8">
+                                        {recipe.instructions.map((step, i) => (
+                                            <div key={i} className="flex gap-6 items-start group">
+                                                <div className="font-english text-3xl font-light text-[#889671] opacity-30 group-hover:opacity-100 transition-opacity">
+                                                    {String(i + 1).padStart(2, '0')}
+                                                </div>
+                                                <p className="text-lg font-medium leading-relaxed text-[#4A503C]/80">{step}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                );
-            }
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [selectedId, setSelectedId] = useState(null);
+            const [search, setSearch] = useState('');
+            const [activeCat, setActiveCat] = useState('הכל');
+
+            const categories = ['הכל', 'SMOOTHIES', 'FISH', 'MEAT & POULTRY', 'SALADS'];
+            const filtered = useMemo(() => RECIPES_DB.filter(r => 
+                (activeCat === 'הכל' || r.category === activeCat) && 
+                (r.title.includes(search) || r.category.includes(search) || r.tags.some(t => t.includes(search)))
+            ), [activeCat, search]);
+
+            const selected = RECIPES_DB.find(r => r.id === selectedId);
+            if (selected) return <RecipeDetail recipe={selected} onBack={() => setSelectedId(null)} />;
 
             return (
-                <div className="max-w-4xl mx-auto p-6 pb-20">
-                    <header className="py-12 text-center space-y-4">
-                        <span className="text-[10px] font-black uppercase tracking-[0.5em] opacity-30">Fuel Library</span>
-                        <h1 className="text-5xl font-black italic uppercase tracking-tighter text-[#4A503C]">ספריית הדלק</h1>
-                        <p className="text-lg font-medium opacity-50">87 מתכונים שנבחרו בקפידה לאיזון המערכת שלך.</p>
+                <div className="max-w-6xl mx-auto px-6 py-20 fade-in">
+                    <header className="text-center mb-16 space-y-6">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.6em] text-slate-400 block">Metabolic Fuel Engine</span>
+                        <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-[#4A503C] leading-none uppercase">The Library.</h1>
+                        <p className="text-xl md:text-2xl font-medium opacity-40 max-w-2xl mx-auto leading-relaxed">הדלק המדויק לבניית המערכת שלך.</p>
                     </header>
 
-                    {/* Search & Filters */}
-                    <div className="space-y-6 mb-12">
+                    <div className="max-w-4xl mx-auto mb-20 space-y-8">
                         <input 
-                            type="text" 
-                            placeholder="חפשי מתכון או רכיב (למשל: סלמון...)"
-                            className="w-full p-5 rounded-3xl bg-white border border-black/5 shadow-sm outline-none focus:ring-2 focus:ring-[#EC6CA1]/20 transition-all font-bold"
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            type="text" placeholder="חפשי מתכון או רכיב..." 
+                            className="w-full p-8 rounded-[35px] border border-black/5 shadow-sm outline-none focus:ring-4 focus:ring-[#EC6CA1]/5 font-bold text-xl pr-10 text-center"
+                            onChange={e => setSearch(e.target.value)}
                         />
-                        
-                        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                        <div className="flex gap-3 overflow-x-auto no-scrollbar justify-center pb-4">
                             {categories.map(c => (
-                                <button 
-                                    key={c} 
-                                    onClick={() => setActiveCat(c)}
-                                    className={`filter-btn ${activeCat === c ? 'active' : ''}`}
-                                >
-                                    {c}
-                                </button>
+                                <button key={c} onClick={() => setActiveCat(c)} className={`px-8 py-3 rounded-full text-xs font-bold border transition-all whitespace-nowrap ${activeCat === c ? 'bg-[#4A503C] text-white' : 'bg-white opacity-40 hover:opacity-100'}`}>{c}</button>
                             ))}
-                        </div>
-
-                        <div className="flex items-center gap-3 pt-2">
-                            <button 
-                                onClick={() => setFilterGluten(!filterGluten)}
-                                className={`text-[11px] font-bold px-4 py-2 rounded-full transition-all border ${filterGluten ? 'bg-[#EC6CA1]/10 border-[#EC6CA1] text-[#EC6CA1]' : 'opacity-40 border-black/5'}`}
-                            >
-                                🌾 ללא גלוטן בלבד
-                            </button>
                         </div>
                     </div>
 
-                    {/* Recipe Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {filteredRecipes.map(recipe => (
-                            <div key={recipe.id} onClick={() => setSelectedRecipe(recipe)} className="recipe-card p-6 cursor-pointer flex flex-col justify-between h-48">
-                                <div>
-                                    <div className="flex justify-between items-start mb-4">
-                                        <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{recipe.cat}</span>
-                                        {!recipe.gluten && <span className="text-[18px]">🌾</span>}
-                                    </div>
-                                    <h3 className="text-2xl font-black italic uppercase leading-tight tracking-tighter mb-2">{recipe.title}</h3>
-                                    <p className="text-xs font-bold opacity-40 leading-relaxed line-clamp-1">{recipe.ingredients.join(', ')}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {filtered.map(r => (
+                            <div key={r.id} onClick={() => setSelectedId(r.id)} className="recipe-card bg-white rounded-[40px] overflow-hidden border border-[#4A503C]/5 shadow-sm cursor-pointer group">
+                                <div className="h-64 relative overflow-hidden">
+                                    <img src={r.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <div className="absolute top-6 right-6 bg-white/95 backdrop-blur px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-[#4A503C]">{r.category}</div>
                                 </div>
-                                <div className="flex justify-between items-center pt-4 border-t border-black/5">
-                                    <span className="text-[10px] font-bold opacity-30">{recipe.time} • {recipe.level}</span>
-                                    <span className="text-[#EC6CA1] font-black">View →</span>
+                                <div className="p-10">
+                                    <h3 className="text-3xl font-black tracking-tight mb-4 group-hover:text-[#EC6CA1] transition-colors leading-tight">{r.title}</h3>
+                                    <div className="flex flex-wrap gap-2 mb-8">
+                                        {r.tags.slice(0,3).map(t => <span key={t} className="text-[10px] font-bold opacity-30">#{t}</span>)}
+                                    </div>
+                                    <div className="pt-8 border-t border-black/5 flex justify-between items-center">
+                                        <div className="flex items-center gap-3 opacity-30 text-[10px] font-bold uppercase tracking-widest">
+                                            <Clock size={14} /> {r.meta[1].val}
+                                        </div>
+                                        <span className="text-[#EC6CA1] font-black text-sm group-hover:translate-x-[-5px] transition-transform">צפי במתכון ←</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -220,5 +189,3 @@
     </script>
 </body>
 </html>
-
-
