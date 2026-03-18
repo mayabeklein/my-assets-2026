@@ -3,61 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Balance | משדרגים עבורך</title>
+    <title>My Balance | Upgrading</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --rose: #EC6CA1;
             --olive: #4A503C;
             --white: #FFFFFF;
+            --bg: #FDFCFB;
         }
+
         body { 
             font-family: 'Assistant', sans-serif; 
-            background-color: var(--white); 
+            background-color: var(--bg); 
             color: var(--olive);
             height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
+            /* ביטול נטוי גורף */
+            font-style: normal !important;
+            -webkit-font-smoothing: antialiased;
         }
-        .luxury-card {
-            background: white;
-            padding: 3rem;
-            border-radius: 40px;
+
+        * { font-style: normal !important; }
+
+        .luxury-container {
+            background: var(--white);
+            padding: 5rem 3rem;
+            border-radius: 32px;
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 90%;
-            border: 1px solid rgba(74, 80, 60, 0.05);
-            box-shadow: 0 20px 50px rgba(74, 80, 60, 0.05);
+            border: 1px solid rgba(74, 80, 60, 0.06);
+            box-shadow: 0 30px 70px rgba(74, 80, 60, 0.04);
+            animation: fadeIn 1.2s ease-out forwards;
         }
-        .pulse-pink {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: .7; transform: scale(1.05); }
+
+        .logo-box {
+            width: 70px;
+            height: 70px;
+            border: 1px solid var(--olive);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 3rem;
+            position: relative;
+        }
+
+        .logo-box::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 12px;
+            height: 12px;
+            background: var(--rose);
+        }
+
+        .letter-spacing-fine {
+            letter-spacing: 0.4em;
+        }
+
+        .divider {
+            width: 40px;
+            height: 1px;
+            background: var(--rose);
+            margin: 2.5rem auto;
+            opacity: 0.4;
         }
     </style>
 </head>
 <body>
-    <div class="luxury-card">
-        <div class="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-8 pulse-pink">
-            <span style="color: var(--rose); font-size: 2rem;">✨</span>
+
+    <div class="luxury-container">
+        <!-- Luxury Monogram -->
+        <div class="logo-box">
+            <span class="text-2xl font-extrabold tracking-tighter">MB</span>
         </div>
-        <h1 class="text-3xl font-black italic uppercase tracking-tighter mb-4 leading-tight">
-            הקיסרות <br/><span style="color: var(--rose)">משתדרגת.</span>
+
+        <span class="text-[10px] font-bold uppercase letter-spacing-fine opacity-30 block mb-6">Metabolic Empire OS</span>
+        
+        <h1 class="text-[34px] font-light leading-tight text-[#4A503C] mb-2">
+            הקיסרות <span class="font-bold">משתדרגת.</span>
         </h1>
-        <div class="w-12 h-1 bg-slate-100 mx-auto mb-8 rounded-full"></div>
-        <p class="text-lg font-medium opacity-60 leading-relaxed mb-10 italic">
-            אנחנו מבצעים שיפוצים קלים במערכת כדי להעניק לך חוויה מדויקת ויוקרתית יותר. 
-            <br/><br/>
-            אנחנו נחזור ממש בקרוב.
+        
+        <div class="divider"></div>
+        
+        <p class="text-[17px] font-medium opacity-60 leading-relaxed max-w-[300px] mx-auto">
+            אנחנו מבצעים התאמות במערכת כדי להעניק לך חוויה מדויקת, חכמה ויוקרתית יותר. 
+            <br>
+            נחזור ממש בקרוב.
         </p>
-        <div class="text-[10px] font-black uppercase tracking-[0.4em] opacity-30">
-            My Balance 2026 • Under Construction
+
+        <div class="mt-20 text-[9px] font-black uppercase tracking-[0.5em] opacity-20">
+            Maya Ben Efraim • 2026
         </div>
     </div>
+
 </body>
 </html>
