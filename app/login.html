@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Balance | Secure Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --rose: #EC6CA1;
+            --olive: #4A503C;
+            --white: #FFFFFF;
+            --bg: #FDFCFB;
+        }
+        body { 
+            font-family: 'Assistant', sans-serif; 
+            background-color: var(--white); /* רקע לבן נקי להטמעה חלקה בקג'אבי */
+            color: var(--olive);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-style: normal !important;
+        }
+        * { font-style: normal !important; }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-fine {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(74, 80, 60, 0.1);
+            background: #F9F9F7;
+            outline: none;
+            transition: all 0.3s ease;
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+        .input-fine:focus { border-color: var(--rose); background: white; }
+
+        .btn-google {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(74, 80, 60, 0.1);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 2rem;
+        }
+        .btn-google:hover { background: #f8f9fa; border-color: var(--rose); }
+
+        .btn-primary {
+            width: 100%;
+            padding: 1.1rem;
+            border-radius: 16px;
+            background: var(--olive);
+            color: white;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .divider {
+            position: relative;
+            margin: 2rem 0;
+            height: 1px;
+            background: rgba(74, 80, 60, 0.05);
+        }
+        .divider span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 0 1rem;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: rgba(74, 80, 60, 0.2);
+            letter-spacing: 0.2em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="mb-8">
+            <div class="w-12 h-12 border-2 border-olive rounded-xl flex items-center justify-center font-black mx-auto mb-4">MB</div>
+            <h1 class="text-2xl font-bold tracking-tight">כניסה <span class="text-[#EC6CA1]">למיי באלאנס.</span></h1>
+            <p class="text-xs opacity-40 font-medium">התחברי כדי לסנכרן את הריטואל היומי</p>
+        </div>
+
+        <!-- Option 1: Google (Fastest for App Users) -->
+        <button id="googleBtn" class="btn-google">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18" />
+            <span class="text-sm">התחברות מהירה עם Google</span>
+        </button>
+
+        <div class="divider"><span>או עם מייל</span></div>
+
+        <!-- Option 2: Email/Pass (Classic) -->
+        <form id="loginForm">
+            <input type="email" id="email" placeholder="כתובת אימייל" class="input-fine" required />
+            <input type="password" id="password" placeholder="סיסמה" class="input-fine" required />
+            <button type="submit" class="btn-primary mt-2">כניסה למערכת</button>
+        </form>
+
+        <div class="mt-8 flex justify-between px-2">
+            <button id="forgotPass" class="text-[10px] font-black uppercase tracking-widest opacity-30 hover:opacity-100">שכחתי סיסמה</button>
+            <a href="./register.html" class="text-[10px] font-black uppercase tracking-widest text-[#EC6CA1]">יצירת חשבון חדש</a>
+        </div>
+    </div>
+
+    <script>
+        // המפתחות שלך מה-Firebase ששלחת קודם
+        const firebaseConfig = {
+            apiKey: "AIzaSyByO-6lO1Wn0S3Idwhv3eAohPNAOmMJ_WQ",
+            authDomain: "my-balance-empire.firebaseapp.com",
+            projectId: "my-balance-empire",
+            appId: "1:469352045239:web:95c953de45063a6bc0cb32"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // כניסה עם גוגל (עובד מצוין בתוך אפליקציות)
+        document.getElementById('googleBtn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(() => window.location.href = './index.html')
+                .catch(err => console.log(err));
+        });
+
+        // כניסה ידנית
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => window.location.href = './index.html')
+                .catch(err => alert("פרטי כניסה שגויים. נסי שוב או השתמשי בגוגל."));
+        });
+
+        // איפוס סיסמה
+        document.getElementById('forgotPass').addEventListener('click', () => {
+            const email = prompt("הזיני את המייל שלך לאיפוס סיסמה:");
+            if(email) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => alert("שלחנו לך מייל לאיפוס (בעברית!). בדקי את תיבת הדואר שלך."))
+                    .catch(() => alert("המייל לא נמצא במערכת."));
+            }
+        });
+    </script>
+</body>
+</html>
