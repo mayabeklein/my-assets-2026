@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Body Insight — Longevity OS</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { background: #07090F; font-family: 'Heebo', sans-serif; }
+    /* ZERO-ITALICS POLICY */
+    * { font-style: normal !important; }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #C9A96E; cursor: pointer;
+      border: 2px solid #07090F;
+      box-shadow: 0 0 8px rgba(201,169,110,0.5);
+    }
+    input[type=number] {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; color: #EEF2F7;
+      font-family: 'Heebo', sans-serif;
+      font-size: 16px; font-weight: 600;
+      padding: 10px 14px; width: 100%;
+      outline: none; text-align: center;
+    }
+    input[type=number]:focus { border-color: #C9A96E; }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.035); opacity: 0.88; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes ring-fill {
+      from { stroke-dasharray: 0 999; }
+    }
+    .breathe  { animation: breathe 4.5s ease-in-out infinite; }
+    .fade-up  { animation: fadeUp 0.4s ease forwards; }
+    .ring-anim { animation: ring-fill 1.4s ease forwards; }
+
+    .tab-btn { transition: color 0.2s, border-color 0.2s; }
+    .tab-btn:hover { color: #C9A96E !important; }
+    .habit-row { transition: background 0.2s, border-color 0.2s; cursor: pointer; }
+    .habit-row:hover { background: rgba(255,255,255,0.04) !important; }
+    .analyze-btn { transition: opacity 0.2s, transform 0.15s; }
+    .analyze-btn:hover:not(:disabled) { opacity: 0.88; transform: scale(0.99); }
+    .analyze-btn:active:not(:disabled) { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+  const { useState, useMemo, useCallback, useEffect } = React;
+
+  /* ══════════════════════════════════════════════════
+     PALETTE
+  ══════════════════════════════════════════════════ */
+  const P = {
+    bg:          '#07090F',
+    surface:     '#0C1120',
+    surfaceHi:   '#111C30',
+    gold:        '#C9A96E',
+    goldGlow:    'rgba(201,169,110,0.18)',
+    sleep:       '#818CF8',
+    stress:      '#F87171',
+    focus:       '#34D399',
+    cravings:    '#FBBF24',
+    text:        '#EEF2F7',
+    muted:       '#7D8FA3',
+    dim:         '#2E3A4A',
+    optimal:     '#34D399',
+    warning:     '#FBBF24',
+    danger:      '#F87171',
+    border:      'rgba(255,255,255,0.07)',
+  };
+
+  /* ══════════════════════════════════════════════════
+     BIO-AGE FORMULA
+  ══════════════════════════════════════════════════ */
+  function calcBioAge(chrono, m, lab, pts) {
+    let d = 0;
+    // HbA1c — optimal < 5.2
+    if (lab.hba1c < 5.2)       d -= 1.8;
+    else if (lab.hba1c < 5.7)  d += (lab.hba1c - 5.2) * 2.5;
+    else                       d += 2.5 + (lab.hba1c - 5.7) * 3.5;
+    // CRP — optimal < 0.5
+    if (lab.crp < 0.5)         d -= 2.2;
+    else if (lab.crp < 1.0)    d += (lab.crp - 0.5) * 2.0;
+    else                       d += 1.0 + (lab.crp - 1.0) * 2.5;
+    // Ferritin — optimal 70–100
+    if (lab.ferritin >= 70 && lab.ferritin <= 100) d -= 1.5;
+    else if (lab.ferritin >= 50 && lab.ferritin < 70) d += 0.5;
+    else if (lab.ferritin > 100 && lab.ferritin <= 150) d += 0.5;
+    else d += 2.2;
+    // Lifestyle
+    d += (8 - m.sleep)    * 0.45;
+    d += (m.stress - 4)   * 0.35;
+    d += (7 - m.focus)    * 0.2;
+    d += (m.cravings - 4) * 0.28;
+    // Resilience points
+    d -= pts * 0.09;
+    return Math.round(Math.max(18, chrono + d));
+  }
+
+  /* ══════════════════════════════════════════════════
+     RADAR CHART
+  ══════════════════════════════════════════════════ */
+  function RadarChart({ data, size = 230 }) {
+    const cx = size / 2, cy = size / 2, R = size * 0.36;
+    const axes = [
+      { key:'sleep',    label:'שינה',   color:P.sleep,    invert:false },
+      { key:'focus',    label:'פוקוס',  color:P.focus,    invert:false },
+      { key:'stress',   label:'סטרס',   color:P.stress,   invert:true  },
+      { key:'cravings', label:'חשקים',  color:P.cravings, invert:true  },
+    ];
+    const angle = i => (Math.PI * 2 * i) / axes.length - Math.PI / 2;
+    const pt = (i, v) => {
+      const r = (v / 10) * R, a = angle(i);
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    };
+    const ringStr = v => axes.map((_, i) => {
+      const a = angle(i), r = (v / 10) * R;
+      return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+    }).join(' ');
+    const dataPts = axes.map((ax, i) => {
+      const raw = data[ax.key] ?? 5;
+      return pt(i, ax.invert ? 10 - raw : raw);
+    });
+    const poly = dataPts.map(([x,y]) => `${x},${y}`).join(' ');
+    return (
+      <div className="breathe" style={{ display:'inline-block' }}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          {[2,4,6,8,10].map(v => (
+            <polygon key={v} points={ringStr(v)} fill="none"
+              stroke="rgba(255,255,255,0.04)" strokeWidth={v===10?1.5:1} />
+          ))}
+          {axes.map((ax,i) => {
+            const a = angle(i);
+            return <line key={ax.key} x1={cx} y1={cy}
+              x2={cx+R*Math.cos(a)} y2={cy+R*Math.sin(a)}
+              stroke="rgba(255,255,255,0.06)" strokeWidth="1" />;
+          })}
+          <polygon points={poly}
+            fill="rgba(201,169,110,0.11)" stroke={P.gold}
+            strokeWidth="1.5" strokeLinejoin="round" />
+          {dataPts.map(([x,y],i) => (
+            <circle key={i} cx={x} cy={y} r={4.5}
+              fill={axes[i].color} stroke={P.bg} strokeWidth="2" />
+          ))}
+          {axes.map((ax,i) => {
+            const a = angle(i), d = R * 1.28;
+            return (
+              <text key={ax.key}
+                x={cx + d*Math.cos(a)} y={cy + d*Math.sin(a)}
+                textAnchor="middle" dominantBaseline="middle"
+                fill={ax.color} fontSize="12" fontWeight="700"
+                fontFamily="'Heebo',sans-serif">
+                {ax.label}
+              </text>
+            );
+          })}
+          <circle cx={cx} cy={cy} r={3} fill={P.gold} opacity={0.5} />
+        </svg>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     BIO-AGE RING
+  ══════════════════════════════════════════════════ */
+  function BioAgeRing({ bioAge, chronoAge }) {
+    const diff = chronoAge - bioAge;
+    const radius = 54, circ = 2 * Math.PI * radius;
+    const fill = Math.min((bioAge / 80) * circ, circ);
+    const color = diff >= 4 ? P.optimal : diff >= 0 ? P.warning : P.danger;
+    const label = diff > 0
+      ? `צעירה ב-${diff} שנים`
+      : diff === 0 ? 'בגיל הכרונולוגי'
+      : `${Math.abs(diff)} שנה מעל`;
+    return (
+      <div style={{ position:'relative', width:154, height:154, margin:'0 auto' }}>
+        <svg width="154" height="154" style={{ transform:'rotate(-90deg)' }}>
+          <circle cx="77" cy="77" r={radius} fill="none"
+            stroke="rgba(255,255,255,0.06)" strokeWidth="10" />
+          <circle cx="77" cy="77" r={radius} fill="none"
+            stroke={color} strokeWidth="10" strokeLinecap="round"
+            className="ring-anim"
+            strokeDasharray={`${fill} ${circ}`}
+            style={{ transition:'stroke-dasharray 1.2s ease, stroke 0.8s ease' }} />
+        </svg>
+        <div style={{
+          position:'absolute', inset:0,
+          display:'flex', flexDirection:'column',
+          alignItems:'center', justifyContent:'center',
+        }}>
+          <div style={{ fontSize:44, fontWeight:900, color, lineHeight:1,
+            fontFamily:"'Heebo',sans-serif" }}>{bioAge}</div>
+          <div style={{ fontSize:11, color:P.muted, fontWeight:600, marginTop:3 }}>גיל ביולוגי</div>
+          <div style={{ fontSize:10, color, fontWeight:700, marginTop:4,
+            background:`${color}18`, padding:'2px 8px', borderRadius:20 }}>
+            {label}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     METRIC SLIDER
+  ══════════════════════════════════════════════════ */
+  function MetricSlider({ label, value, color, onChange }) {
+    return (
+      <div style={{ marginBottom:14 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+          <span style={{ fontSize:13, color:P.muted, fontWeight:600 }}>{label}</span>
+          <span style={{ fontSize:13, color, fontWeight:800 }}>
+            {value.toFixed(1)} מתוך 10
+          </span>
+        </div>
+        <input type="range" min="0" max="10" step="0.5" value={value}
+          onChange={e => onChange(parseFloat(e.target.value))}
+          style={{ accentColor: color }} />
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     BIOMARKER BAR
+  ══════════════════════════════════════════════════ */
+  function BiomarkerBar({ label, value, unit, domain, optimal, target }) {
+    const [min, max] = domain, [oMin, oMax] = optimal;
+    const rng  = max - min;
+    const pos  = Math.min(Math.max(((value - min) / rng) * 100, 2), 97);
+    const optL = ((oMin - min) / rng) * 100;
+    const optW = ((oMax - oMin) / rng) * 100;
+    const isOpt  = value >= oMin && value <= oMax;
+    const isNear = !isOpt && value >= oMin * 0.85 && value <= oMax * 1.2;
+    const color  = isOpt ? P.optimal : isNear ? P.warning : P.danger;
+    const badge  = isOpt ? 'אופטימלי' : isNear ? 'גבולי' : 'מחוץ לטווח';
+    return (
+      <div style={{ marginBottom:22 }}>
+        <div style={{ display:'flex', justifyContent:'space-between',
+          alignItems:'flex-end', marginBottom:8 }}>
+          <div>
+            <div style={{ fontSize:14, fontWeight:700, color:P.text }}>{label}</div>
+            <div style={{ fontSize:11, color:P.muted, marginTop:2 }}>יעד: {target}</div>
+          </div>
+          <div style={{ textAlign:'left' }}>
+            <span style={{ fontSize:24, fontWeight:900, color }}>{value}</span>
+            <span style={{ fontSize:12, color:P.muted, marginRight:3 }}> {unit}</span>
+            <div style={{ fontSize:10, color, fontWeight:700,
+              background:`${color}1A`, padding:'2px 9px',
+              borderRadius:20, display:'inline-block', marginTop:3 }}>
+              {badge}
+            </div>
+          </div>
+        </div>
+        <div style={{ position:'relative', height:8,
+          background:'rgba(255,255,255,0.06)', borderRadius:4 }}>
+          <div style={{ position:'absolute', height:'100%',
+            left:`${optL}%`, width:`${optW}%`,
+            background:'rgba(52,211,153,0.16)', borderRadius:4 }} />
+          <div style={{ position:'absolute', left:`${pos}%`, top:'50%',
+            transform:'translate(-50%,-50%)', width:14, height:14,
+            borderRadius:'50%', background:color,
+            border:`2px solid ${P.bg}`,
+            boxShadow:`0 0 10px ${color}70`,
+            transition:'left 0.8s ease' }} />
+        </div>
+        <div style={{ display:'flex', justifyContent:'space-between',
+          marginTop:5, fontSize:10, color:P.dim }}>
+          <span>{min}</span>
+          <span style={{ color:`${P.optimal}80` }}>{oMin} עד {oMax}</span>
+          <span>{max}</span>
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     CARD WRAPPER
+  ══════════════════════════════════════════════════ */
+  function Card({ children, style = {} }) {
+    return (
+      <div style={{
+        background: P.surface, borderRadius:18,
+        border:`1px solid ${P.border}`, padding:20,
+        boxShadow:'0 4px 28px rgba(0,0,0,0.45)',
+        ...style,
+      }}>{children}</div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     STAT PILL
+  ══════════════════════════════════════════════════ */
+  function StatPill({ label, value, unit = '', color }) {
+    return (
+      <div style={{ background:P.surface, border:`1px solid ${P.border}`,
+        borderRadius:14, padding:'13px 12px', textAlign:'center', flex:1 }}>
+        <div style={{ fontSize:24, fontWeight:900, color, lineHeight:1 }}>
+          {value}{unit}
+        </div>
+        <div style={{ fontSize:11, color:P.muted, marginTop:5, fontWeight:600 }}>
+          {label}
+        </div>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     SECTION HEADER
+  ══════════════════════════════════════════════════ */
+  function SectionHead({ children }) {
+    return (
+      <div style={{ fontSize:13, fontWeight:800, color:P.gold,
+        letterSpacing:0.4, marginBottom:14 }}>
+        {children}
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     HABITS DATA
+  ══════════════════════════════════════════════════ */
+  const HABITS = [
+    { id:'breakfast',   label:'אכלתי מיני בוקר',              pts:1 },
+    { id:'water',       label:'שתיתי 8 כוסות מים',             pts:1 },
+    { id:'movement',    label:'זזתי 30 דקות לפחות',             pts:2 },
+    { id:'sleep_prep',  label:'הכנתי סביבת שינה אופטימלית',    pts:2 },
+    { id:'protein',     label:'אכלתי חלבון בכל ארוחה',          pts:1 },
+    { id:'breathing',   label:'תרגלתי 5 דקות נשימה עמוקה',     pts:1 },
+    { id:'supplements', label:'לקחתי תוספים יומיים',            pts:1 },
+    { id:'salmon',      label:'אכלתי סלמון או אומגה 3',         pts:1 },
+  ];
+  const MAX_PTS = HABITS.reduce((s, h) => s + h.pts, 0);
+
+  /* ══════════════════════════════════════════════════
+     LAB CONFIG
+  ══════════════════════════════════════════════════ */
+  const LAB = [
+    { id:'hba1c',    label:'HbA1c',   unit:'%',      domain:[4.0,7.0],  optimal:[4.5,5.2], target:'פחות מ-5.2', step:0.1, def:5.4 },
+    { id:'crp',      label:'CRP',     unit:'mg/L',   domain:[0,3.0],    optimal:[0,0.5],   target:'פחות מ-0.5', step:0.1, def:0.8 },
+    { id:'ferritin', label:'Ferritin',unit:'ng/mL',  domain:[10,200],   optimal:[70,100],  target:'70 עד 100',  step:1,   def:65  },
+  ];
+
+  /* ══════════════════════════════════════════════════
+     DASHBOARD TAB
+  ══════════════════════════════════════════════════ */
+  function DashboardTab({ metrics, setMetrics, bioAge, chronoAge, resPoints }) {
+    const handleSleep = useCallback(v => {
+      setMetrics(prev => {
+        const delta = v - prev.sleep;
+        return {
+          ...prev,
+          sleep:    v,
+          stress:   +Math.min(10, Math.max(0, prev.stress   - delta * 0.42)).toFixed(1),
+          cravings: +Math.min(10, Math.max(0, prev.cravings - delta * 0.34)).toFixed(1),
+        };
+      });
+    }, [setMetrics]);
+
+    const stressColor = metrics.stress > 7 ? P.danger
+      : metrics.stress > 4 ? P.warning : P.optimal;
+
+    return (
+      <div className="fade-up">
+        {/* Bio-Age Hero */}
+        <Card style={{ marginBottom:16, textAlign:'center', paddingTop:24, paddingBottom:20 }}>
+          <BioAgeRing bioAge={bioAge} chronoAge={chronoAge} />
+          <div style={{ fontSize:12, color:P.muted, marginTop:12, fontWeight:500 }}>
+            גיל כרונולוגי: {chronoAge} · נקודות חוסן: {resPoints} מתוך {MAX_PTS}
+          </div>
+        </Card>
+
+        {/* Quick Stats */}
+        <div style={{ display:'flex', gap:10, marginBottom:16 }}>
+          <StatPill label="שינה" value={metrics.sleep.toFixed(1)} color={P.sleep} unit=" שע" />
+          <StatPill label="סטרס" value={metrics.stress.toFixed(1)} color={stressColor} />
+          <StatPill label="חוסן" value={resPoints} color={P.gold} />
+        </div>
+
+        {/* Resilience Radar */}
+        <Card style={{ marginBottom:16 }}>
+          <SectionHead>חוסן ביולוגי</SectionHead>
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:6 }}>
+            <RadarChart data={metrics} size={224} />
+          </div>
+          <div style={{ fontSize:11, color:P.muted, textAlign:'center' }}>
+            עיגול מלא = ערך אופטימלי · שינה טובה מורידה סטרס וחשקים
+          </div>
+        </Card>
+
+        {/* Sliders */}
+        <Card>
+          <SectionHead>עדכון מדדים יומיים</SectionHead>
+          <MetricSlider label="שינה (שעות)" value={metrics.sleep}
+            color={P.sleep} onChange={handleSleep} />
+          <MetricSlider label="רמת סטרס" value={metrics.stress}
+            color={P.stress} onChange={v => setMetrics(p => ({...p, stress:v}))} />
+          <MetricSlider label="פוקוס" value={metrics.focus}
+            color={P.focus} onChange={v => setMetrics(p => ({...p, focus:v}))} />
+          <MetricSlider label="חשקים" value={metrics.cravings}
+            color={P.cravings} onChange={v => setMetrics(p => ({...p, cravings:v}))} />
+          <div style={{ fontSize:11, color:P.muted, marginTop:10,
+            padding:'9px 13px', background:P.goldGlow,
+            borderRadius:9, lineHeight:1.65 }}>
+            כשאיכות השינה עולה — הסטרס והחשקים יורדים אוטומטית (קורלציה הפוכה)
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     LAB TAB
+  ══════════════════════════════════════════════════ */
+  function LabTab({ labValues, setLabValues }) {
+    const [analyzing, setAnalyzing] = useState(false);
+    const [insight,   setInsight]   = useState(null);
+
+    const runAnalysis = () => {
+      setAnalyzing(true);
+      setInsight(null);
+      setTimeout(() => {
+        const { hba1c, crp, ferritin } = labValues;
+        const lines = [];
+        if (hba1c < 5.2)
+          lines.push(`HbA1c מצוין (${hba1c}%) — שמרי על תזונה דלת-סוכר.`);
+        else
+          lines.push(`HbA1c (${hba1c}%) מעל היעד — מומלץ להפחית פחמימות מעובדות ולהוסיף הליכות לאחר ארוחות.`);
+        if (crp < 0.5)
+          lines.push(`CRP תקין — דלקתיות נמוכה.`);
+        else
+          lines.push(`CRP (${crp}) מעיד על דלקתיות — הוסיפי אומגה 3 (סלמון), כורכום עם פלפל שחור.`);
+        if (ferritin >= 70 && ferritin <= 100)
+          lines.push(`Ferritin אופטימלי (${ferritin}).`);
+        else if (ferritin < 70)
+          lines.push(`Ferritin נמוך (${ferritin}) — שקלי תוסף ברזל עם ויטמין C, רחוק מקפה.`);
+        else
+          lines.push(`Ferritin גבוה (${ferritin}) — ייתכן צורך בהערכה רפואית.`);
+        setInsight(lines);
+        setAnalyzing(false);
+      }, 2000);
+    };
+
+    return (
+      <div className="fade-up">
+        <Card style={{ marginBottom:16 }}>
+          <SectionHead>ניתוח ביומרקרים — Longevity Range</SectionHead>
+          {LAB.map(m => (
+            <BiomarkerBar key={m.id} label={m.label} value={labValues[m.id]}
+              unit={m.unit} domain={m.domain} optimal={m.optimal} target={m.target} />
+          ))}
+        </Card>
+
+        <Card style={{ marginBottom:16 }}>
+          <SectionHead>עדכון ערכי מעבדה</SectionHead>
+          {LAB.map(m => (
+            <div key={m.id} style={{ marginBottom:14 }}>
+              <div style={{ fontSize:13, color:P.muted, marginBottom:6, fontWeight:600 }}>
+                {m.label} ({m.unit})
+              </div>
+              <input type="number" step={m.step}
+                min={m.domain[0]} max={m.domain[1]}
+                value={labValues[m.id]}
+                onChange={e => {
+                  const v = parseFloat(e.target.value);
+                  if (!isNaN(v)) setLabValues(p => ({...p, [m.id]:v}));
+                }} />
+            </div>
+          ))}
+        </Card>
+
+        <Card>
+          <SectionHead>ניתוח AI — Gemini 2.5 Flash</SectionHead>
+          <div style={{ fontSize:12, color:P.muted, marginBottom:14, lineHeight:1.65 }}>
+            המרת ערכי נורמה רפואית לערכי אופטימום Longevity — ניתוח מותאם אישית.
+          </div>
+          <button className="analyze-btn"
+            onClick={runAnalysis} disabled={analyzing}
+            style={{
+              width:'100%', padding:'15px',
+              background: analyzing ? P.dim
+                : `linear-gradient(135deg, #C9A96E 0%, #A67C52 100%)`,
+              color: analyzing ? P.muted : P.bg,
+              border:'none', borderRadius:12,
+              fontSize:15, fontWeight:900,
+              cursor: analyzing ? 'not-allowed' : 'pointer',
+              fontFamily:"'Heebo',sans-serif",
+              letterSpacing:0.3,
+            }}>
+            {analyzing ? 'מנתח בדיקות...' : 'נתחי את בדיקות הדם שלי'}
+          </button>
+
+          {insight && (
+            <div className="fade-up" style={{
+              marginTop:14, padding:16,
+              background:`${P.goldGlow}`,
+              border:`1px solid rgba(201,169,110,0.25)`,
+              borderRadius:12,
+            }}>
+              {insight.map((line, i) => (
+                <div key={i} style={{
+                  fontSize:13, color:P.text, lineHeight:1.7,
+                  fontWeight:500, marginBottom: i < insight.length-1 ? 8 : 0,
+                  paddingRight:10,
+                  borderRight:`2px solid ${P.gold}60`,
+                }}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     DAILY TAB
+  ══════════════════════════════════════════════════ */
+  function DailyTab({ checked, onToggle, totalPts }) {
+    const pct = Math.round((totalPts / MAX_PTS) * 100);
+    const barColor = pct >= 80 ? P.optimal : pct >= 50 ? P.warning : P.danger;
+    return (
+      <div className="fade-up">
+        <Card style={{ marginBottom:16 }}>
+          <div style={{ display:'flex', justifyContent:'space-between',
+            alignItems:'center', marginBottom:12 }}>
+            <div>
+              <SectionHead>פרוטוקול יומי</SectionHead>
+              <div style={{ fontSize:11, color:P.muted, fontWeight:500, marginTop:-8 }}>
+                נקודות חוסן ביולוגי של היום
+              </div>
+            </div>
+            <div style={{ textAlign:'left' }}>
+              <span style={{ fontSize:30, fontWeight:900, color:barColor }}>{totalPts}</span>
+              <span style={{ fontSize:13, color:P.muted }}> מתוך {MAX_PTS}</span>
+            </div>
+          </div>
+          <div style={{ height:8, background:'rgba(255,255,255,0.06)',
+            borderRadius:4, overflow:'hidden' }}>
+            <div style={{ height:'100%', width:`${pct}%`,
+              background:`linear-gradient(90deg,${barColor}70,${barColor})`,
+              borderRadius:4, transition:'width 0.6s ease' }} />
+          </div>
+          <div style={{ display:'flex', justifyContent:'space-between',
+            marginTop:6, fontSize:11, color:P.dim }}>
+            <span>0</span>
+            <span style={{ color:barColor, fontWeight:700 }}>
+              {pct}% הושלם
+            </span>
+            <span>{MAX_PTS}</span>
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHead>הרגלי הזהות שלך</SectionHead>
+          {HABITS.map(h => {
+            const on = checked.has(h.id);
+            return (
+              <div key={h.id} className="habit-row"
+                onClick={() => onToggle(h.id)}
+                style={{
+                  display:'flex', alignItems:'center', gap:14,
+                  padding:'14px 14px', borderRadius:12, marginBottom:8,
+                  background: on ? 'rgba(52,211,153,0.07)' : P.surface,
+                  border:`1px solid ${on ? 'rgba(52,211,153,0.22)' : P.border}`,
+                }}>
+                {/* Checkbox */}
+                <div style={{
+                  width:22, height:22, borderRadius:6, flexShrink:0,
+                  border:`2px solid ${on ? P.optimal : P.dim}`,
+                  background: on ? P.optimal : 'transparent',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  transition:'all 0.2s',
+                }}>
+                  {on && (
+                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                      <path d="M1 4.5L4 7.5L10 1" stroke="#07090F"
+                        strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+                <div style={{ flex:1, fontSize:14, fontWeight:600,
+                  color: on ? P.text : P.muted }}>
+                  {h.label}
+                </div>
+                <div style={{
+                  fontSize:11, fontWeight:800,
+                  color: on ? P.optimal : P.dim,
+                  background: on ? 'rgba(52,211,153,0.14)' : 'rgba(255,255,255,0.04)',
+                  padding:'3px 9px', borderRadius:20, whiteSpace:'nowrap',
+                }}>
+                  {on && '+'}{h.pts} נק
+                </div>
+              </div>
+            );
+          })}
+          {pct >= 80 && (
+            <div className="fade-up" style={{
+              marginTop:12, padding:'13px 16px', textAlign:'center',
+              background:'rgba(52,211,153,0.09)',
+              border:'1px solid rgba(52,211,153,0.28)',
+              borderRadius:12, fontSize:13,
+              color:P.optimal, fontWeight:700,
+            }}>
+              יום מדהים — הגיל הביולוגי שלך יורד היום
+            </div>
+          )}
+        </Card>
+      </div>
+    );
+  }
+
+  /* ══════════════════════════════════════════════════
+     MAIN APP
+  ══════════════════════════════════════════════════ */
+  const CHRONO_AGE = 38;
+
+  function LongevityOS() {
+    const [tab, setTab] = useState('dashboard');
+    const [metrics, setMetrics] = useState({
+      sleep: 7.0, stress: 5.5, focus: 6.0, cravings: 5.0,
+    });
+    const [labValues, setLabValues] = useState(
+      Object.fromEntries(LAB.map(m => [m.id, m.def]))
+    );
+    const [checked, setChecked] = useState(new Set());
+
+    const totalPts = useMemo(() =>
+      [...checked].reduce((s, id) => s + (HABITS.find(h => h.id === id)?.pts ?? 0), 0),
+      [checked]
+    );
+
+    const bioAge = useMemo(
+      () => calcBioAge(CHRONO_AGE, metrics, labValues, totalPts),
+      [metrics, labValues, totalPts]
+    );
+
+    const toggleHabit = useCallback(id => {
+      setChecked(prev => {
+        const next = new Set(prev);
+        next.has(id) ? next.delete(id) : next.add(id);
+        return next;
+      });
+      if (id === 'breakfast') {
+        setMetrics(p => ({ ...p, focus: +Math.min(10, p.focus + 0.3).toFixed(1) }));
+      }
+    }, []);
+
+    const TABS = [
+      { id:'dashboard', label:'דשבורד' },
+      { id:'lab',       label:'מעבדה'  },
+      { id:'daily',     label:'יומן'   },
+    ];
+
+    return (
+      <div style={{
+        minHeight:'100vh', background:P.bg,
+        fontFamily:"'Heebo',sans-serif",
+        color:P.text, direction:'rtl',
+        WebkitFontSmoothing:'antialiased',
+      }}>
+        {/* ── Header ── */}
+        <div style={{
+          padding:'18px 20px 14px', background:P.bg,
+          borderBottom:`1px solid ${P.border}`,
+          position:'sticky', top:0, zIndex:20,
+        }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+            <div>
+              <div style={{ fontSize:18, fontWeight:900, color:P.gold, letterSpacing:0.4 }}>
+                My Body Insight
+              </div>
+              <div style={{ fontSize:11, color:P.muted, fontWeight:600, marginTop:1 }}>
+                Longevity OS
+              </div>
+            </div>
+            <div style={{
+              background:P.goldGlow,
+              border:`1px solid rgba(201,169,110,0.3)`,
+              borderRadius:10, padding:'7px 13px',
+              fontSize:13, color:P.gold, fontWeight:800,
+            }}>
+              גיל ביולוגי: {bioAge}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Tabs ── */}
+        <div style={{
+          display:'flex', background:P.bg,
+          borderBottom:`1px solid ${P.border}`,
+          position:'sticky', top:58, zIndex:19,
+          padding:'0 4px',
+        }}>
+          {TABS.map(t => (
+            <button key={t.id} className="tab-btn"
+              onClick={() => setTab(t.id)}
+              style={{
+                flex:1, padding:'14px 0',
+                background:'none', border:'none', outline:'none',
+                cursor:'pointer', fontSize:13, fontWeight:700,
+                fontFamily:"'Heebo',sans-serif",
+                color: tab === t.id ? P.gold : P.muted,
+                borderBottom: tab === t.id
+                  ? `2px solid ${P.gold}` : '2px solid transparent',
+              }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Content ── */}
+        <div style={{ padding:'16px 18px 48px' }}>
+          {tab === 'dashboard' && (
+            <DashboardTab
+              metrics={metrics} setMetrics={setMetrics}
+              bioAge={bioAge} chronoAge={CHRONO_AGE}
+              resPoints={totalPts}
+            />
+          )}
+          {tab === 'lab' && (
+            <LabTab labValues={labValues} setLabValues={setLabValues} />
+          )}
+          {tab === 'daily' && (
+            <DailyTab checked={checked} onToggle={toggleHabit} totalPts={totalPts} />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<LongevityOS />);
+  </script>
+</body>
+</html>
